@@ -23,7 +23,7 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
@@ -508,9 +508,9 @@ func NewQueueManager(
 
 // AppendMetadata sends metadata to the remote storage. Metadata is sent in batches, but is not parallelized.
 func (t *QueueManager) AppendMetadata(ctx context.Context, metadata []scrape.MetricMetadata) {
-	mm := make([]prompb.MetricMetadata, 0, len(metadata))
+	mm := make([]*prompb.MetricMetadata, 0, len(metadata))
 	for _, entry := range metadata {
-		mm = append(mm, prompb.MetricMetadata{
+		mm = append(mm, &prompb.MetricMetadata{
 			MetricFamilyName: entry.Metric,
 			Help:             entry.Help,
 			Type:             metricTypeToMetricTypeProto(entry.Type),
@@ -533,7 +533,7 @@ func (t *QueueManager) AppendMetadata(ctx context.Context, metadata []scrape.Met
 	}
 }
 
-func (t *QueueManager) sendMetadataWithBackoff(ctx context.Context, metadata []prompb.MetricMetadata, pBuf *proto.Buffer) error {
+func (t *QueueManager) sendMetadataWithBackoff(ctx context.Context, metadata []*prompb.MetricMetadata, pBuf *proto.Buffer) error {
 	// Build the WriteRequest with no samples.
 	req, _, _, err := buildWriteRequest(t.logger, nil, metadata, pBuf, nil, nil)
 	if err != nil {
@@ -591,8 +591,8 @@ func isSampleOld(baseTime time.Time, sampleAgeLimit time.Duration, ts int64) boo
 	return sampleTs.Before(limitTs)
 }
 
-func isTimeSeriesOldFilter(metrics *queueManagerMetrics, baseTime time.Time, sampleAgeLimit time.Duration) func(ts prompb.TimeSeries) bool {
-	return func(ts prompb.TimeSeries) bool {
+func isTimeSeriesOldFilter(metrics *queueManagerMetrics, baseTime time.Time, sampleAgeLimit time.Duration) func(ts *prompb.TimeSeries) bool {
+	return func(ts *prompb.TimeSeries) bool {
 		if sampleAgeLimit == 0 {
 			// If sampleAgeLimit is unset, then we never skip samples due to their age.
 			return false
@@ -1428,11 +1428,12 @@ func (s *shards) runShard(ctx context.Context, shardID int, queue *queue) {
 	}
 
 	batchQueue := queue.Chan()
-	pendingData := make([]prompb.TimeSeries, max)
+	pendingData := make([]*prompb.TimeSeries, max)
 	for i := range pendingData {
-		pendingData[i].Samples = []prompb.Sample{{}}
+		pendingData[i] = &prompb.TimeSeries{}
+		pendingData[i].Samples = []*prompb.Sample{{}}
 		if s.qm.sendExemplars {
-			pendingData[i].Exemplars = []prompb.Exemplar{{}}
+			pendingData[i].Exemplars = []*prompb.Exemplar{{}}
 		}
 	}
 
@@ -1493,7 +1494,7 @@ func (s *shards) runShard(ctx context.Context, shardID int, queue *queue) {
 	}
 }
 
-func (s *shards) populateTimeSeries(batch []timeSeries, pendingData []prompb.TimeSeries) (int, int, int) {
+func (s *shards) populateTimeSeries(batch []timeSeries, pendingData []*prompb.TimeSeries) (int, int, int) {
 	var nPendingSamples, nPendingExemplars, nPendingHistograms int
 	for nPending, d := range batch {
 		pendingData[nPending].Samples = pendingData[nPending].Samples[:0]
@@ -1510,13 +1511,13 @@ func (s *shards) populateTimeSeries(batch []timeSeries, pendingData []prompb.Tim
 		pendingData[nPending].Labels = labelsToLabelsProto(d.seriesLabels, pendingData[nPending].Labels)
 		switch d.sType {
 		case tSample:
-			pendingData[nPending].Samples = append(pendingData[nPending].Samples, prompb.Sample{
+			pendingData[nPending].Samples = append(pendingData[nPending].Samples, &prompb.Sample{
 				Value:     d.value,
 				Timestamp: d.timestamp,
 			})
 			nPendingSamples++
 		case tExemplar:
-			pendingData[nPending].Exemplars = append(pendingData[nPending].Exemplars, prompb.Exemplar{
+			pendingData[nPending].Exemplars = append(pendingData[nPending].Exemplars, &prompb.Exemplar{
 				Labels:    labelsToLabelsProto(d.exemplarLabels, nil),
 				Value:     d.value,
 				Timestamp: d.timestamp,
@@ -1533,7 +1534,7 @@ func (s *shards) populateTimeSeries(batch []timeSeries, pendingData []prompb.Tim
 	return nPendingSamples, nPendingExemplars, nPendingHistograms
 }
 
-func (s *shards) sendSamples(ctx context.Context, samples []prompb.TimeSeries, sampleCount, exemplarCount, histogramCount int, pBuf *proto.Buffer, buf *[]byte) {
+func (s *shards) sendSamples(ctx context.Context, samples []*prompb.TimeSeries, sampleCount, exemplarCount, histogramCount int, pBuf *proto.Buffer, buf *[]byte) {
 	begin := time.Now()
 	err := s.sendSamplesWithBackoff(ctx, samples, sampleCount, exemplarCount, histogramCount, pBuf, buf)
 	if err != nil {
@@ -1559,7 +1560,7 @@ func (s *shards) sendSamples(ctx context.Context, samples []prompb.TimeSeries, s
 }
 
 // sendSamples to the remote storage with backoff for recoverable errors.
-func (s *shards) sendSamplesWithBackoff(ctx context.Context, samples []prompb.TimeSeries, sampleCount, exemplarCount, histogramCount int, pBuf *proto.Buffer, buf *[]byte) error {
+func (s *shards) sendSamplesWithBackoff(ctx context.Context, samples []*prompb.TimeSeries, sampleCount, exemplarCount, histogramCount int, pBuf *proto.Buffer, buf *[]byte) error {
 	// Build the WriteRequest with no metadata.
 	req, highest, lowest, err := buildWriteRequest(s.qm.logger, samples, nil, pBuf, *buf, nil)
 	s.qm.buildRequestLimitTimestamp.Store(lowest)
@@ -1699,7 +1700,7 @@ func sendWriteRequestWithBackoff(ctx context.Context, cfg config.QueueConfig, l 
 	}
 }
 
-func buildTimeSeries(timeSeries []prompb.TimeSeries, filter func(prompb.TimeSeries) bool) (int64, int64, []prompb.TimeSeries, int, int, int) {
+func buildTimeSeries(timeSeries []*prompb.TimeSeries, filter func(*prompb.TimeSeries) bool) (int64, int64, []*prompb.TimeSeries, int, int, int) {
 	var highest int64
 	var lowest int64
 	var droppedSamples, droppedExemplars, droppedHistograms int
@@ -1751,7 +1752,7 @@ func buildTimeSeries(timeSeries []prompb.TimeSeries, filter func(prompb.TimeSeri
 	return highest, lowest, timeSeries, droppedSamples, droppedExemplars, droppedHistograms
 }
 
-func buildWriteRequest(logger log.Logger, timeSeries []prompb.TimeSeries, metadata []prompb.MetricMetadata, pBuf *proto.Buffer, buf []byte, filter func(prompb.TimeSeries) bool) ([]byte, int64, int64, error) {
+func buildWriteRequest(logger log.Logger, timeSeries []*prompb.TimeSeries, metadata []*prompb.MetricMetadata, pBuf *proto.Buffer, buf []byte, filter func(*prompb.TimeSeries) bool) ([]byte, int64, int64, error) {
 	highest, lowest, timeSeries,
 		droppedSamples, droppedExemplars, droppedHistograms := buildTimeSeries(timeSeries, filter)
 

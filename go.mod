@@ -8,6 +8,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v5 v5.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v4 v4.3.0
 	github.com/Code-Hex/go-generics-cache v1.3.1
+	github.com/CrowdStrike/csproto v0.27.1
 	github.com/KimMachineGun/automemlimit v0.5.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9
@@ -26,7 +27,7 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0
 	github.com/go-openapi/strfmt v0.22.0
 	github.com/go-zookeeper/zk v1.0.3
-	github.com/gogo/protobuf v1.3.2
+	github.com/golang/protobuf v1.5.3
 	github.com/golang/snappy v0.0.4
 	github.com/google/pprof v0.0.0-20240117000934-35fc243c5815
 	github.com/google/uuid v1.5.0
@@ -50,7 +51,7 @@ require (
 	github.com/ovh/go-ovh v1.4.3
 	github.com/prometheus/alertmanager v0.26.0
 	github.com/prometheus/client_golang v1.18.0
-	github.com/prometheus/client_model v0.5.0
+	github.com/prometheus/client_model v0.5.1-0.20240123152139-d56cd794bca9
 	github.com/prometheus/common v0.46.0
 	github.com/prometheus/common/assets v0.2.0
 	github.com/prometheus/common/sigv4 v0.1.0
@@ -130,10 +131,10 @@ require (
 	github.com/go-openapi/validate v0.22.1 // indirect
 	github.com/go-resty/resty/v2 v2.11.0 // indirect
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
 	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -215,3 +216,5 @@ exclude (
 	github.com/grpc-ecosystem/grpc-gateway v1.14.7
 	google.golang.org/api v0.30.0
 )
+
+replace github.com/prometheus/client_model => ../client_model

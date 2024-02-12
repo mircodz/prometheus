@@ -23,7 +23,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 // DefaultChunkedReadLimit is the default value for the maximum size of the protobuf frame client allows.

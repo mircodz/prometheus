@@ -243,7 +243,7 @@ $(PROMU):
 .PHONY: proto
 proto:
 	@echo ">> generating code from proto files"
-	@./scripts/genproto.sh
+	@cd prompb && buf generate
 
 ifdef GOLANGCI_LINT
 $(GOLANGCI_LINT):

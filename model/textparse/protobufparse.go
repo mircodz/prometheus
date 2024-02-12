@@ -23,15 +23,15 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/gogo/protobuf/types"
+	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/common/model"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/prometheus/prometheus/model/exemplar"
 	"github.com/prometheus/prometheus/model/histogram"
 	"github.com/prometheus/prometheus/model/labels"
 
-	dto "github.com/prometheus/prometheus/prompb/io/prometheus/client"
+	dto "github.com/prometheus/client_model/go"
 )
 
 // ProtobufParser is a very inefficient way of unmarshaling the old Prometheus
@@ -145,18 +145,9 @@ func (p *ProtobufParser) Series() ([]byte, *int64, float64) {
 	default:
 		panic("encountered unexpected metric type, this is a bug")
 	}
-	if ts != 0 {
+	if m.TimestampMs != nil {
 		return p.metricBytes.Bytes(), &ts, v
 	}
-	// TODO(beorn7): We assume here that ts==0 means no timestamp. That's
-	// not true in general, but proto3 originally has no distinction between
-	// unset and default. At a later stage, the `optional` keyword was
-	// (re-)introduced in proto3, but gogo-protobuf never got updated to
-	// support it. (Note that setting `[(gogoproto.nullable) = true]` for
-	// the `timestamp_ms` field doesn't help, either.) We plan to migrate
-	// away from gogo-protobuf to an actively maintained protobuf
-	// implementation. Once that's done, we can simply use the `optional`
-	// keyword and check for the unset state explicitly.
 	return p.metricBytes.Bytes(), nil, v
 }
 
@@ -364,7 +355,7 @@ func (p *ProtobufParser) Exemplar(ex *exemplar.Exemplar) bool {
 // CreatedTimestamp returns CT or nil if CT is not present or
 // invalid (as timestamp e.g. negative value) on counters, summaries or histograms.
 func (p *ProtobufParser) CreatedTimestamp() *int64 {
-	var ct *types.Timestamp
+	var ct *timestamppb.Timestamp
 	switch p.mf.GetType() {
 	case dto.MetricType_COUNTER:
 		ct = p.mf.GetMetric()[p.metricPos].GetCounter().GetCreatedTimestamp()
@@ -374,7 +365,7 @@ func (p *ProtobufParser) CreatedTimestamp() *int64 {
 		ct = p.mf.GetMetric()[p.metricPos].GetHistogram().GetCreatedTimestamp()
 	default:
 	}
-	ctAsTime, err := types.TimestampFromProto(ct)
+	ctAsTime, err := timestampFromProto(ct)
 	if err != nil {
 		// Errors means ct == nil or invalid timestamp, which we silently ignore.
 		return nil

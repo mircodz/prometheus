@@ -20,7 +20,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 
@@ -28,7 +28,7 @@ import (
 	"github.com/prometheus/prometheus/model/histogram"
 	"github.com/prometheus/prometheus/model/labels"
 
-	dto "github.com/prometheus/prometheus/prompb/io/prometheus/client"
+	dto "github.com/prometheus/client_model/go"
 )
 
 func createTestProtoBuf(t *testing.T) *bytes.Buffer {

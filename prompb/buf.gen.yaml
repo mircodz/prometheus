@@ -1,0 +1,8 @@
+version: v1
+plugins:
+  - plugin: go
+    out: ./
+    opt: paths=source_relative
+  - plugin: fastmarshal
+    out: ./
+    opt: paths=source_relative,apiversion=v2,enableunsafedecode=true
