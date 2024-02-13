@@ -760,6 +760,15 @@ func labelProtosToLabels(labelPairs []*prompb.Label) labels.Labels {
 	return b.Labels()
 }
 
+// LabelProtosToMetric unpack a []*prompb.Label to a model.Metric.
+func LabelProtosToMetric(labelPairs []*prompb.Label) model.Metric {
+	metric := make(model.Metric, len(labelPairs))
+	for _, l := range labelPairs {
+		metric[model.LabelName(l.Name)] = model.LabelValue(l.Value)
+	}
+	return metric
+}
+
 // labelsToLabelsProto transforms labels into prompb labels. The buffer slice
 // will be used to avoid allocations if it is big enough to store the labels.
 func labelsToLabelsProto(lbls labels.Labels, buf []*prompb.Label) []*prompb.Label {
@@ -798,7 +807,7 @@ func DecodeWriteRequest(r io.Reader) (*prompb.WriteRequest, error) {
 	}
 
 	req := &prompb.WriteRequest{}
-	if err := proto.Unmarshal(reqBuf, req); err != nil {
+	if err := req.Unmarshal(reqBuf); err != nil {
 		return nil, err
 	}
 
