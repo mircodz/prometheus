@@ -124,7 +124,7 @@ func (h *readHandler) remoteReadSamples(
 	w.Header().Set("Content-Type", "application/x-protobuf")
 	w.Header().Set("Content-Encoding", "snappy")
 
-	resp := prompb.ReadResponse{
+	resp := &prompb.ReadResponse{
 		Results: make([]*prompb.QueryResult, len(req.Queries)),
 	}
 	for i, query := range req.Queries {
@@ -180,7 +180,7 @@ func (h *readHandler) remoteReadSamples(
 		}
 	}
 
-	if err := EncodeReadResponse(&resp, w); err != nil {
+	if err := EncodeReadResponse(resp, w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

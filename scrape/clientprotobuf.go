@@ -17,8 +17,6 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/golang/protobuf/proto"
-
 	// Intentionally using client model to simulate client in tests.
 	dto "github.com/prometheus/client_model/go"
 )
@@ -37,7 +35,7 @@ func MetricFamilyToProtobuf(metricFamily *dto.MetricFamily) ([]byte, error) {
 // Append a MetricFamily protobuf representation to a buffer.
 // This function is intended for testing scraping by providing protobuf serialized input.
 func AddMetricFamilyToProtobuf(buffer *bytes.Buffer, metricFamily *dto.MetricFamily) error {
-	protoBuf, err := proto.Marshal(metricFamily)
+	protoBuf, err := metricFamily.Marshal()
 	if err != nil {
 		return err
 	}

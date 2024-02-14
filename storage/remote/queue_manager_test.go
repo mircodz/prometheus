@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/go-kit/log"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/client_golang/prometheus"
 	client_testutil "github.com/prometheus/client_golang/prometheus/testutil"
@@ -781,8 +780,8 @@ func (c *TestWriteClient) Store(_ context.Context, req []byte, _ int) error {
 		return err
 	}
 
-	var reqProto prompb.WriteRequest
-	if err := proto.Unmarshal(reqBuf, &reqProto); err != nil {
+	reqProto := &prompb.WriteRequest{}
+	if err := reqProto.Unmarshal(reqBuf); err != nil {
 		return err
 	}
 	count := 0

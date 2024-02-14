@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/client_golang/prometheus"
 	config_util "github.com/prometheus/common/config"
@@ -281,7 +280,7 @@ func (c *Client) Read(ctx context.Context, query *prompb.Query) (*prompb.QueryRe
 			query,
 		},
 	}
-	data, err := proto.Marshal(req)
+	data, err := req.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal read request: %w", err)
 	}
@@ -329,8 +328,8 @@ func (c *Client) Read(ctx context.Context, query *prompb.Query) (*prompb.QueryRe
 		return nil, fmt.Errorf("error reading response: %w", err)
 	}
 
-	var resp prompb.ReadResponse
-	err = proto.Unmarshal(uncompressed, &resp)
+	resp := &prompb.ReadResponse{}
+	err = resp.Unmarshal(uncompressed)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal response body: %w", err)
 	}

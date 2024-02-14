@@ -19,7 +19,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 
@@ -780,7 +779,7 @@ type mockWriter struct {
 
 func (m *mockWriter) Write(p []byte) (n int, err error) {
 	cr := &prompb.ChunkedReadResponse{}
-	if err := proto.Unmarshal(p, cr); err != nil {
+	if err := cr.Unmarshal(p); err != nil {
 		return 0, fmt.Errorf("unmarshaling: %w", err)
 	}
 	m.actual = append(m.actual, cr.ChunkedSeries...)

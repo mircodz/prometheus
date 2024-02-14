@@ -28,7 +28,6 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/prometheus/client_golang/prometheus"
@@ -247,8 +246,8 @@ func serve(logger log.Logger, addr string, writers []writer, readers []reader) e
 			return
 		}
 
-		var req prompb.ReadRequest
-		if err := proto.Unmarshal(reqBuf, &req); err != nil {
+		req := &prompb.ReadRequest{}
+		if err := req.Unmarshal(reqBuf); err != nil {
 			level.Error(logger).Log("msg", "Unmarshal error", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -262,14 +261,14 @@ func serve(logger log.Logger, addr string, writers []writer, readers []reader) e
 		reader := readers[0]
 
 		var resp *prompb.ReadResponse
-		resp, err = reader.Read(&req)
+		resp, err = reader.Read(req)
 		if err != nil {
 			level.Warn(logger).Log("msg", "Error executing query", "query", req, "storage", reader.Name(), "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		data, err := proto.Marshal(resp)
+		data, err := resp.Marshal()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

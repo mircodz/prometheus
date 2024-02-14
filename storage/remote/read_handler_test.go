@@ -93,8 +93,8 @@ func TestSampledReadEndpoint(t *testing.T) {
 	uncompressed, err := snappy.Decode(nil, compressed)
 	require.NoError(t, err)
 
-	var resp prompb.ReadResponse
-	err = proto.Unmarshal(uncompressed, &resp)
+	resp := &prompb.ReadResponse{}
+	err = resp.Unmarshal(uncompressed)
 	require.NoError(t, err)
 
 	require.Len(t, resp.Results, 2, "Expected 2 results.")
@@ -162,7 +162,7 @@ func BenchmarkStreamReadEndpoint(b *testing.B) {
 		Queries:               []*prompb.Query{query},
 		AcceptedResponseTypes: []prompb.ReadRequest_ResponseType{prompb.ReadRequest_STREAMED_XOR_CHUNKS},
 	}
-	data, err := proto.Marshal(req)
+	data, err := req.Marshal()
 	require.NoError(b, err)
 
 	b.ResetTimer()

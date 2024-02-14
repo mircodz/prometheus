@@ -18,12 +18,11 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/prometheus/prometheus/prompb"
 	"hash"
 	"hash/crc32"
 	"io"
 	"net/http"
-
-	"github.com/golang/protobuf/proto"
 )
 
 // DefaultChunkedReadLimit is the default value for the maximum size of the protobuf frame client allows.
@@ -147,10 +146,10 @@ func (r *ChunkedReader) Next() ([]byte, error) {
 
 // NextProto consumes the next available record by calling r.Next, and decodes
 // it into the protobuf with proto.Unmarshal.
-func (r *ChunkedReader) NextProto(pb proto.Message) error {
+func (r *ChunkedReader) NextProto(pb *prompb.ChunkedReadResponse) error {
 	rec, err := r.Next()
 	if err != nil {
 		return err
 	}
-	return proto.Unmarshal(rec, pb)
+	return pb.Unmarshal(rec)
 }

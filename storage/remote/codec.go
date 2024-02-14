@@ -24,7 +24,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/prometheus/common/model"
 	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
@@ -73,17 +72,18 @@ func DecodeReadRequest(r *http.Request) (*prompb.ReadRequest, error) {
 		return nil, err
 	}
 
-	var req prompb.ReadRequest
-	if err := proto.Unmarshal(reqBuf, &req); err != nil {
+	req := &prompb.ReadRequest{}
+	if err := req.Unmarshal(reqBuf); err != nil {
 		return nil, err
 	}
 
-	return &req, nil
+	return req, nil
 }
 
 // EncodeReadResponse writes a remote.Response to a http.ResponseWriter.
 func EncodeReadResponse(resp *prompb.ReadResponse, w http.ResponseWriter) error {
-	data, err := proto.Marshal(resp)
+	// TODO pool buffer
+	data, err := resp.Marshal()
 	if err != nil {
 		return err
 	}
@@ -793,6 +793,17 @@ func metricTypeToMetricTypeProto(t model.MetricType) prompb.MetricMetadata_Metri
 	return prompb.MetricMetadata_MetricType(v)
 }
 
+// TODO this should be part of writeHandler
+var bufPool sync.Pool
+
+func poolBuffer(size int) []byte {
+	data, ok := bufPool.Get().([]byte)
+	if ok && cap(data) >= size {
+		return data
+	}
+	return make([]byte, size)
+}
+
 // DecodeWriteRequest from an io.Reader into a prompb.WriteRequest, handling
 // snappy decompression.
 func DecodeWriteRequest(r io.Reader) (*prompb.WriteRequest, error) {
@@ -801,13 +812,17 @@ func DecodeWriteRequest(r io.Reader) (*prompb.WriteRequest, error) {
 		return nil, err
 	}
 
-	reqBuf, err := snappy.Decode(nil, compressed)
+	l, err := snappy.DecodedLen(compressed)
+	buf := poolBuffer(l)
+	defer bufPool.Put(buf)
+
+	_, err = snappy.Decode(buf, compressed)
 	if err != nil {
 		return nil, err
 	}
 
 	req := &prompb.WriteRequest{}
-	if err := req.Unmarshal(reqBuf); err != nil {
+	if err := req.Unmarshal(buf); err != nil {
 		return nil, err
 	}
 
