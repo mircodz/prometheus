@@ -134,9 +134,9 @@ func TestSampledReadEndpoint(t *testing.T) {
 func BenchmarkStreamReadEndpoint(b *testing.B) {
 	store := promql.LoadedStorage(b, `
 	load 1m
-		test_metric1{foo="bar1",baz="qux"} 0+100x119
-		test_metric1{foo="bar2",baz="qux"} 0+100x120
-		test_metric1{foo="bar3",baz="qux"} 0+100x240
+		test_metric1{foo0="bar1",baz0="qux",foo1="bar1",baz2="qux",foo2="bar1",baz3="qux",foo4="bar1",baz4="qux",foo5="bar1",baz5="qux"} 0+100x119
+		test_metric1{foo0="bar2",baz0="qux",foo1="bar2",baz2="qux",foo2="bar2",baz3="qux",foo4="bar2",baz4="qux",foo5="bar2",baz5="qux"} 0+100x120
+		test_metric1{foo0="bar3",baz0="qux",foo1="bar3",baz2="qux",foo2="bar3",baz3="qux",foo4="bar3",baz4="qux",foo5="bar3",baz5="qux"} 0+100x240
 	`)
 
 	b.Cleanup(func() { store.Close() })

@@ -161,7 +161,16 @@ func BenchmarkRemoteWritehandler(b *testing.B) {
 		buf, _, _, err := buildWriteRequest(nil, []*prompb.TimeSeries{{
 			Labels: []*prompb.Label{
 				{Name: "__name__", Value: "test_metric"},
-				{Name: "test_label_name_" + num, Value: labelValue + num},
+				{Name: "test_label_name0_" + num, Value: labelValue + num},
+				{Name: "test_label_name1_" + num, Value: labelValue + num},
+				{Name: "test_label_name2_" + num, Value: labelValue + num},
+				{Name: "test_label_name3_" + num, Value: labelValue + num},
+				{Name: "test_label_name4_" + num, Value: labelValue + num},
+				{Name: "test_label_name5_" + num, Value: labelValue + num},
+				{Name: "test_label_name6_" + num, Value: labelValue + num},
+				{Name: "test_label_name7_" + num, Value: labelValue + num},
+				{Name: "test_label_name8_" + num, Value: labelValue + num},
+				{Name: "test_label_name9_" + num, Value: labelValue + num},
 			},
 			Histograms: []*prompb.Histogram{HistogramToHistogramProto(0, &testHistogram)},
 		}}, nil, nil, nil, nil)
