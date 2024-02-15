@@ -5,8 +5,8 @@ package prompb
 
 import (
 	"fmt"
-	"sync/atomic"
 	"github.com/CrowdStrike/csproto"
+	"sync/atomic"
 )
 
 //------------------------------------------------------------------------------
@@ -95,8 +95,6 @@ func (m *WriteRequest) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -224,8 +222,6 @@ func (m *ReadRequest) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -346,8 +342,6 @@ func (m *ReadResponse) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -476,8 +470,6 @@ func (m *Query) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -606,8 +598,6 @@ func (m *QueryResult) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -717,8 +707,6 @@ func (m *ChunkedReadResponse) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {

@@ -519,7 +519,7 @@ func TestDecodeWriteRequest(t *testing.T) {
 	buf, _, _, err := buildWriteRequest(nil, writeRequestFixture.Timeseries, nil, nil, nil, nil)
 	require.NoError(t, err)
 
-	actual, err := DecodeWriteRequest(bytes.NewReader(buf))
+	actual, err := DecodeWriteRequest(bytes.NewReader(buf), int64(len(buf)))
 	require.NoError(t, err)
 	require.EqualExportedValues(t, *writeRequestFixture, *actual)
 }

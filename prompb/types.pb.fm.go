@@ -5,8 +5,8 @@ package prompb
 
 import (
 	"fmt"
-	"sync/atomic"
 	"github.com/CrowdStrike/csproto"
+	"sync/atomic"
 )
 
 //------------------------------------------------------------------------------
@@ -103,8 +103,6 @@ func (m *MetricMetadata) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -239,8 +237,6 @@ func (m *Sample) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -367,8 +363,6 @@ func (m *Exemplar) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -631,8 +625,6 @@ func (m *Histogram) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -906,8 +898,6 @@ func (m *BucketSpan) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -1054,8 +1044,6 @@ func (m *TimeSeries) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -1188,8 +1176,6 @@ func (m *Label) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -1301,8 +1287,6 @@ func (m *Labels) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -1416,8 +1400,6 @@ func (m *LabelMatcher) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -1583,8 +1565,6 @@ func (m *ReadHints) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -1762,8 +1742,6 @@ func (m *Chunk) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {
@@ -1905,8 +1883,6 @@ func (m *ChunkedSeries) Unmarshal(p []byte) error {
 		return nil
 	}
 	dec := csproto.NewDecoder(p)
-	// enable faster, but unsafe, string decoding
-	dec.SetMode(csproto.DecoderModeFast)
 	for dec.More() {
 		tag, wt, err := dec.DecodeTag()
 		if err != nil {

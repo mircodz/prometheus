@@ -806,14 +806,20 @@ func poolBuffer(size int) []byte {
 
 // DecodeWriteRequest from an io.Reader into a prompb.WriteRequest, handling
 // snappy decompression.
-func DecodeWriteRequest(r io.Reader) (*prompb.WriteRequest, error) {
-	compressed, err := io.ReadAll(r)
+func DecodeWriteRequest(r io.Reader, size int64) (*prompb.WriteRequest, error) {
+	compressed := poolBuffer(int(size))
+	defer bufPool.Put(compressed)
+
+	read, err := io.ReadFull(r, compressed)
 	if err != nil {
 		return nil, err
 	}
+	if int64(read) != size {
+		return nil, errors.New("")
+	}
 
-	l, err := snappy.DecodedLen(compressed)
-	buf := poolBuffer(l)
+	uncompressedSize, err := snappy.DecodedLen(compressed)
+	buf := poolBuffer(uncompressedSize)
 	defer bufPool.Put(buf)
 
 	_, err = snappy.Decode(buf, compressed)

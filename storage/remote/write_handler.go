@@ -58,7 +58,7 @@ func NewWriteHandler(logger log.Logger, reg prometheus.Registerer, appendable st
 }
 
 func (h *writeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	req, err := DecodeWriteRequest(r.Body)
+	req, err := DecodeWriteRequest(r.Body, r.ContentLength)
 	if err != nil {
 		level.Error(h.logger).Log("msg", "Error decoding remote write request", "err", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
