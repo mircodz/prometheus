@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/prometheus/prometheus/util/zeropool"
 	"net/http"
 
 	"github.com/go-kit/log"
@@ -35,11 +36,17 @@ type writeHandler struct {
 	appendable storage.Appendable
 
 	samplesWithInvalidLabelsTotal prometheus.Counter
+
+	bufPool *zeropool.Pool[*[]byte]
 }
 
 // NewWriteHandler creates a http.Handler that accepts remote write requests and
 // writes them to the provided appendable.
 func NewWriteHandler(logger log.Logger, reg prometheus.Registerer, appendable storage.Appendable) http.Handler {
+	bufPool := zeropool.New(func() *[]byte {
+		return nil
+	})
+
 	h := &writeHandler{
 		logger:     logger,
 		appendable: appendable,
@@ -50,6 +57,8 @@ func NewWriteHandler(logger log.Logger, reg prometheus.Registerer, appendable st
 			Name:      "remote_write_invalid_labels_samples_total",
 			Help:      "The total number of remote write samples which contains invalid labels.",
 		}),
+
+		bufPool: &bufPool,
 	}
 	if reg != nil {
 		reg.MustRegister(h.samplesWithInvalidLabelsTotal)
@@ -58,7 +67,7 @@ func NewWriteHandler(logger log.Logger, reg prometheus.Registerer, appendable st
 }
 
 func (h *writeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	req, err := DecodeWriteRequest(r.Body, r.ContentLength)
+	req, err := DecodeWriteRequest(r.Body, r.ContentLength, h.bufPool)
 	if err != nil {
 		level.Error(h.logger).Log("msg", "Error decoding remote write request", "err", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)

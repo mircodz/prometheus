@@ -17,17 +17,16 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"github.com/golang/snappy"
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/util/zeropool"
+	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
+	"golang.org/x/exp/slices"
 	"io"
 	"math"
 	"net/http"
 	"sort"
 	"strings"
-	"sync"
-
-	"github.com/golang/snappy"
-	"github.com/prometheus/common/model"
-	"go.opentelemetry.io/collector/pdata/pmetric/pmetricotlp"
-	"golang.org/x/exp/slices"
 
 	"github.com/prometheus/prometheus/model/exemplar"
 	"github.com/prometheus/prometheus/model/histogram"
@@ -223,7 +222,7 @@ func StreamChunkedReadResponses(
 	ss storage.ChunkSeriesSet,
 	sortedExternalLabels []*prompb.Label,
 	maxBytesInFrame int,
-	marshalPool *sync.Pool,
+	marshalPool *zeropool.Pool[*[]byte],
 ) (annotations.Annotations, error) {
 	var (
 		chks []*prompb.Chunk
@@ -793,22 +792,19 @@ func metricTypeToMetricTypeProto(t model.MetricType) prompb.MetricMetadata_Metri
 	return prompb.MetricMetadata_MetricType(v)
 }
 
-// TODO this should be part of writeHandler
-var bufPool sync.Pool
-
-func poolBuffer(size int) []byte {
-	data, ok := bufPool.Get().([]byte)
-	if ok && cap(data) >= size {
-		return data
+func poolBuffer(size int, pool *zeropool.Pool[*[]byte]) []byte {
+	data := pool.Get()
+	if data != nil && cap(*data) >= size {
+		return (*data)[0:size]
 	}
 	return make([]byte, size)
 }
 
 // DecodeWriteRequest from an io.Reader into a prompb.WriteRequest, handling
 // snappy decompression.
-func DecodeWriteRequest(r io.Reader, size int64) (*prompb.WriteRequest, error) {
-	compressed := poolBuffer(int(size))
-	defer bufPool.Put(compressed)
+func DecodeWriteRequest(r io.Reader, size int64, pool *zeropool.Pool[*[]byte]) (*prompb.WriteRequest, error) {
+	compressed := poolBuffer(int(size), pool)
+	defer pool.Put(&compressed)
 
 	read, err := io.ReadFull(r, compressed)
 	if err != nil {
@@ -819,8 +815,8 @@ func DecodeWriteRequest(r io.Reader, size int64) (*prompb.WriteRequest, error) {
 	}
 
 	uncompressedSize, err := snappy.DecodedLen(compressed)
-	buf := poolBuffer(uncompressedSize)
-	defer bufPool.Put(buf)
+	buf := poolBuffer(uncompressedSize, pool)
+	defer pool.Put(&buf)
 
 	_, err = snappy.Decode(buf, compressed)
 	if err != nil {

@@ -16,14 +16,13 @@ package remote
 import (
 	"context"
 	"errors"
-	"net/http"
-	"strings"
-	"sync"
-
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/prometheus/util/zeropool"
 	"golang.org/x/exp/slices"
+	"net/http"
+	"strings"
 
 	"github.com/prometheus/prometheus/config"
 	"github.com/prometheus/prometheus/model/labels"
@@ -41,12 +40,15 @@ type readHandler struct {
 	remoteReadMaxBytesInFrame int
 	remoteReadGate            *gate.Gate
 	queries                   prometheus.Gauge
-	marshalPool               *sync.Pool
+	marshalPool               *zeropool.Pool[*[]byte]
 }
 
 // NewReadHandler creates a http.Handler that accepts remote read requests and
 // writes them to the provided queryable.
 func NewReadHandler(logger log.Logger, r prometheus.Registerer, queryable storage.SampleAndChunkQueryable, config func() config.Config, remoteReadSampleLimit, remoteReadConcurrencyLimit, remoteReadMaxBytesInFrame int) http.Handler {
+	mashalPool := zeropool.New(func() *[]byte {
+		return nil
+	})
 	h := &readHandler{
 		logger:                    logger,
 		queryable:                 queryable,
@@ -54,7 +56,7 @@ func NewReadHandler(logger log.Logger, r prometheus.Registerer, queryable storag
 		remoteReadSampleLimit:     remoteReadSampleLimit,
 		remoteReadGate:            gate.New(remoteReadConcurrencyLimit),
 		remoteReadMaxBytesInFrame: remoteReadMaxBytesInFrame,
-		marshalPool:               &sync.Pool{},
+		marshalPool:               &mashalPool,
 
 		queries: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: "prometheus",

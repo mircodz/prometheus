@@ -14,7 +14,7 @@
 package prompb
 
 import (
-	"sync"
+	"github.com/prometheus/prometheus/util/zeropool"
 )
 
 func (m *Sample) T() int64   { return m.Timestamp }
@@ -25,10 +25,10 @@ func (h *Histogram) IsFloatHistogram() bool {
 	return ok
 }
 
-func (r *ChunkedReadResponse) PooledMarshal(p *sync.Pool) ([]byte, error) {
+func (r *ChunkedReadResponse) PooledMarshal(p *zeropool.Pool[*[]byte]) ([]byte, error) {
 	size := r.Size()
-	data, ok := p.Get().(*[]byte)
-	if ok && cap(*data) >= size {
+	data := p.Get()
+	if data != nil && cap(*data) >= size {
 		err := r.MarshalTo((*data)[:size])
 		if err != nil {
 			return nil, err
